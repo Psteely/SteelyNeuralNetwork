@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="SteelyNeuralNetwork:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/SteelyNeuralNetwork_jar</output-path>
+    <root id="archive" name="SteelyNeuralNetwork.jar">
+      <element id="module-output" name="SteelyNeuralNetwork" />
+    </root>
+  </artifact>
+</component>
