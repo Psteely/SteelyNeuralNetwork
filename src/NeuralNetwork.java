@@ -2,7 +2,7 @@ class NeuralNetwork {
     int input, hidden, output;
 
 
-    Matrix weights_IH, weights_HO, bias_IH, bias_HO;
+    Matrix weights_IH, weights_HO, bias_H, bias_O;
 
     NeuralNetwork ( int in_, int hidden_, int out_) {
         input = in_;
@@ -15,23 +15,20 @@ class NeuralNetwork {
         weights_IH.randomise();
         weights_HO.randomise();
 
-        bias_IH = new Matrix(hidden, 1);  //weights for the bias for the hidden;
-        bias_HO = new Matrix(output, 1);  //weights for the bias for the output;
+        bias_H = new Matrix(hidden, 1);  //weights for the bias for the hidden;
+        bias_O = new Matrix(output, 1);  //weights for the bias for the output;
 
-        bias_IH.randomise();
-        bias_HO.randomise();
+        bias_H.randomise();
+        bias_O.randomise();
     }
 
     float[] predict(float[] inArray_) {
-        // generate In to hidden outputs
-        Matrix hiddenM = new Matrix(weights_InputToHidden(inArray_));    // hiddenM is weights from in to hidden
-
-        Matrix outMatrix = new Matrix (weights_HiddenToOutput(hiddenM));
-
-        // return as an array
-
-        float[] ffArray = new float[output];
-        ffArray = Matrix.toArray(outMatrix);
+        // generate hidden outputs
+        Matrix hiddenM = new Matrix(weightsInputToHidden(inArray_));
+        // Take these squished inputs and multiply them by the hidden wights
+        Matrix outMatrix = new Matrix(weightsHiddenToOutput(hiddenM));
+        float[] ffArray = new float[output];  //  outputs as an array
+        ffArray = Matrix.toArray(outMatrix);  //  create Array from outputs
         // Just need to normalise probabilities to total 1 Softmax implementation
         float sum = 0;
         for (int i= 0;i <ffArray.length; i++) {
@@ -40,24 +37,19 @@ class NeuralNetwork {
         }
         for (int i= 0;i <ffArray.length; i++) {
             ffArray[i] = ffArray[i] / sum;
-
         }
-        return ffArray;
+        return ffArray;  // This is our predicted results Array
     }
     void train (float[] inArray_, float[] targets_, float lr_) {
-        // ************  From here ***********************************
-        // *********** is really just the feed forward bit ***********
+
         // generate hidden outputs
-        Matrix hiddenM = new Matrix(weights_InputToHidden(inArray_));     // hiddenM is weights from in to hidden
-
-        Matrix outMatrix = new Matrix (weights_HiddenToOutput(hiddenM));
-
-        // ************  to here  **************************************
-        // Now we need to do the back propogation
+        Matrix hiddenM = new Matrix(weightsInputToHidden(inArray_));
+        // Generating output outputs.
+        Matrix outMatrix = new Matrix(weightsHiddenToOutput(hiddenM));
         // Get the targets as a matrix
         Matrix matrixTargets  = new Matrix(targets_.length, 1);
         matrixTargets.fromArray(targets_)  ;   // targets as a matrix
-        // This gives us our output errors matrix.
+        // This gives us our output errors Matrix.
         Matrix output_errors = new Matrix (Matrix.subMatrix(matrixTargets, outMatrix));
 
         // Now we have our output errors we need the gradient descent bit.
@@ -68,13 +60,13 @@ class NeuralNetwork {
         // multiplied by the learning rate
         outMatrix.multiply(lr_);
         //update bias
-        bias_HO.addMatrix(outMatrix);
+        bias_O.addMatrix(outMatrix);
 
-        //calculate deltas
+        //calculate delas
         Matrix hidden_T = Matrix.transpose(hiddenM);
         Matrix weight_HO_deltas = new Matrix(Matrix.multiply(outMatrix, hidden_T));
 
-        //Adjust deltas
+        //Adjust delats
         weights_HO.addMatrix(weight_HO_deltas);
 
         // transpose Hidden to output Weights
@@ -87,10 +79,10 @@ class NeuralNetwork {
         hiddenM.multiply(hidden_errors);
         hiddenM.multiply(lr_);
         // adjust bias
-        bias_IH.addMatrix(hidden);
+        bias_H.addMatrix(hiddenM);
 
         //  input to hidden
-        Matrix inputs_T = new Matrix(Matrix.transpose(inputs));
+        Matrix inputs_T = new Matrix(Matrix.transpose(inputArrayToMatrix(inArray_)));
         Matrix weight_IH_deltas = new Matrix(Matrix.multiply(hiddenM,inputs_T));
 
         // adjust
@@ -99,29 +91,35 @@ class NeuralNetwork {
 
     }
 
-    Matrix weights_InputToHidden (float[] inA_) {
+
+     Matrix  weightsInputToHidden (float[] inA_) {
         // generate In to hidden outputs
+        Matrix inMatrixTmp = new Matrix(inputArrayToMatrix(inA_));
+        // all inputs multiplied by weights
+        Matrix hiddenTmp = new Matrix(Matrix.multiply(weights_IH, inMatrixTmp));
+        // add in the bias weights
+        hiddenTmp.addMatrix(bias_H);
+        // activation function on all weights (squish them to 0-1)
+        hiddenTmp.sigmoid();
+        return hiddenTmp;
+
+    }
+
+    Matrix weightsHiddenToOutput (Matrix hidden_) {
+        // Take these squished inputs and multiply them by the hidden wights
+        Matrix outMatrixTmp = new Matrix(Matrix.multiply(weights_HO, hidden_));
+        // add in the output bias
+        outMatrixTmp.addMatrix(bias_O);
+        //squish it again. This is now our guess. Between 0-1
+        outMatrixTmp.sigmoid();
+        return outMatrixTmp;
+    }
+    Matrix inputArrayToMatrix(float[] inA_) {
         Matrix inMatrix = new Matrix(inA_.length, 1);
         inMatrix.fromArray(inA_);   //   this is now our inputs matrix
-        // all inputs multiplied by weights
-        Matrix hiddenM = new Matrix(Matrix.multiply(weights_IH, inMatrix));
-        // add in the bias weights
-         hiddenM.addMatrix(bias_IH);
-        // activation function on all weights (squish them to 0-1)
-        hiddenM.sigmoid();
-        return hiddenM;
-
+        return inMatrix;
     }
 
-    Matrix weights_HiddenToOutput (Matrix hidden_) {
-        // Take these squished inputs and multiply them by the hidden wights
-        Matrix outMatrix = new Matrix(Matrix.multiply(weights_HO, hidden_));
-        // add in the output bias
-        outMatrix.addMatrix(bias_HO);
-        //squish it again. This is now our guess. Between 0-1
-        outMatrix.sigmoid();
-        return outMatrix;
-    }
 
     float resultIndex (float[] ra_) {
 
