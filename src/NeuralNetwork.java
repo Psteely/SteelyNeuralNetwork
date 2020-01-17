@@ -62,11 +62,11 @@ class NeuralNetwork {
         //update bias
         bias_O.addMatrix(outMatrix);
 
-        //calculate delas
+        //calculate deltas
         Matrix hidden_T = Matrix.transpose(hiddenM);
         Matrix weight_HO_deltas = new Matrix(Matrix.multiply(outMatrix, hidden_T));
 
-        //Adjust delats
+        //Adjust deltas
         weights_HO.addMatrix(weight_HO_deltas);
 
         // transpose Hidden to output Weights
