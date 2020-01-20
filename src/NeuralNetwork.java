@@ -1,11 +1,13 @@
 class NeuralNetwork {
     int input, hidden, output;
     float learningRate;
+    boolean softMax;
 
 
     Matrix weights_IH, weights_HO, bias_H, bias_O;
 
     NeuralNetwork ( int in_, int hidden_, int out_) {
+        softMax = true;
         input = in_;
         hidden = hidden_;
         output = out_;
@@ -21,6 +23,21 @@ class NeuralNetwork {
 
         bias_H.randomise();
         bias_O.randomise();
+    }
+    NeuralNetwork ( NeuralNetwork nn_) {
+        softMax = nn_.softMax;
+        input = nn_.input;
+        hidden = nn_.hidden;
+        output = nn_.output;
+        weights_IH = new Matrix(hidden, input);    // weights between in and hidden
+        weights_HO = new Matrix(output, hidden);   // weights between hidden and out
+
+        weights_IH = nn_.weights_IH;    // weights between in and hidden
+        weights_HO = nn_.weights_HO;  // weights between hidden and out
+
+        bias_H = nn_.bias_H;       //weights for the bias for the hidden;
+        bias_O = nn_.bias_O;      //weights for the bias for the output;
+
     }
 
     float[] predict(float[] inArray_) {
@@ -38,13 +55,17 @@ class NeuralNetwork {
         float[] ffArray = new float[output];  //  outputs as an array
         ffArray = Matrix.toArray(outMatrix);  //  create Array from outputs
         // Just need to normalise probabilities to total 1 Softmax implementation
-        float sum = 0;
-        for (int i= 0;i <ffArray.length; i++) {
-            ffArray[i] = (float) Math.exp( (float) ffArray[i]);
-            sum = sum + ffArray[i];
-        }
-        for (int i= 0;i <ffArray.length; i++) {
-            ffArray[i] = ffArray[i] / sum;
+
+        if (softMax) {
+            float sum = 0;
+            for (int i = 0; i < ffArray.length; i++) {
+                ffArray[i] = (float) Math.exp((float) ffArray[i]);
+                sum = sum + ffArray[i];
+            }
+            for (int i = 0; i < ffArray.length; i++) {
+                ffArray[i] = ffArray[i] / sum;
+            }
+
         }
         return ffArray;  // This is our predicted results Array
     }
@@ -96,6 +117,19 @@ class NeuralNetwork {
         weights_IH.addMatrix(weight_IH_deltas);
 
 
+    }
+
+    void  mutate(float percentage) {
+        weights_HO.mutate(percentage);
+        weights_IH.mutate((percentage));
+
+    }
+
+    void setSoftMaxOn () {
+        softMax = true;
+    }
+    void setSoftMaxOff () {
+        softMax = false;
     }
 
     Matrix  calculateWeights (Matrix weights_, Matrix weightsLayer_) {
