@@ -1,3 +1,5 @@
+import com.sun.source.tree.NewArrayTree;
+
 class NeuralNetwork {
     int input, hidden, output;
     float learningRate;
@@ -11,6 +13,7 @@ class NeuralNetwork {
         input = in_;
         hidden = hidden_;
         output = out_;
+
 
         weights_IH = new Matrix(hidden, input);    // weights between in and hidden
         weights_HO = new Matrix(output, hidden);   // weights between hidden and out
@@ -29,14 +32,30 @@ class NeuralNetwork {
         input = nn_.input;
         hidden = nn_.hidden;
         output = nn_.output;
-        weights_IH = new Matrix(hidden, input);    // weights between in and hidden
-        weights_HO = new Matrix(output, hidden);   // weights between hidden and out
 
         weights_IH = nn_.weights_IH;    // weights between in and hidden
         weights_HO = nn_.weights_HO;  // weights between hidden and out
 
         bias_H = nn_.bias_H;       //weights for the bias for the hidden;
         bias_O = nn_.bias_O;      //weights for the bias for the output;
+
+    }
+
+    static NeuralNetwork nncopy(NeuralNetwork n_) {
+
+        NeuralNetwork nc = new NeuralNetwork(1,1,1);
+        nc.softMax = n_.softMax;
+        nc.input = n_.input;
+        nc.hidden = n_.hidden;
+        nc.output = n_.output;
+        nc.learningRate = n_.learningRate;
+
+        nc.weights_IH = Matrix.matrixCopy(n_.weights_IH);
+        nc.weights_HO = Matrix.matrixCopy(n_.weights_HO);
+        nc.bias_H = Matrix.matrixCopy(n_.bias_H);
+        nc.bias_O = Matrix.matrixCopy(n_.bias_O);
+
+        return nc;
 
     }
 
@@ -120,8 +139,16 @@ class NeuralNetwork {
     }
 
     void  mutate(float percentage) {
-        weights_HO.mutate(percentage);
-        weights_IH.mutate((percentage));
+
+
+         Matrix tmp_IH = new Matrix(hidden, input);    // weights between in and hidden
+         Matrix tmp_HO = new Matrix(output, hidden);   // weights between hidden and out
+         tmp_HO = weights_HO;
+         tmp_IH = weights_IH;
+        tmp_IH.mutate(percentage);
+        tmp_HO.mutate((percentage));
+        weights_HO = tmp_HO;
+        weights_IH = tmp_IH;
 
     }
 

@@ -57,6 +57,18 @@ public class Matrix { //
         }
     }
 
+    static Matrix matrixCopy(Matrix M_) {
+        Matrix cp = new Matrix(M_.rows,M_.cols);
+        for (int r = 0; r < M_.rows; r++) {
+            for (int c = 0; c < M_.cols; c++) {
+                cp.elements[r][c] = M_.elements[r][c];
+            }
+        }
+        return cp;
+
+
+    }
+
     // Mutate
     void mutate(float percentage) {
         for (int r = 0; r < rows; r++) {
